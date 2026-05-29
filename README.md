@@ -14,12 +14,20 @@ Author: Filip Poplewski.
 
 ---
 
+## Screenshots
+
+| Passes (detailed) | Passes (compact) | Pass geometry | Ground track |
+|---|---|---|---|
+| ![Detailed passes list](img/main.jpeg) | ![Compact passes list](img/compact-main.jpeg) | ![Sky-view polar plot](img/compas.jpeg) | ![Ground track and Doppler curve](img/map-view.jpeg) |
+
+---
+
 ## Documentation
 
 | Document | Contents |
 |----------|----------|
 | **[Technical Report (`REPORT.md`)](REPORT.md)** | Full theoretical & technical description orbital mechanics (SGP4/SDP4), the Doppler model, the reception-probability scoring, sky-arc and ground-track geometry, architecture, and the data flow end to end. **Start here for the theory.** |
-| **[Tech Stack (`STACK.md`)](STACK.md)** | Libraries, versions and the rationale behind each dependency (in Polish). |
+| **[Tech Stack (`STACK.md`)](STACK.md)** | Libraries, versions and the rationale behind each dependency. |
 
 ---
 
@@ -210,9 +218,3 @@ Instrumentation tests (Roborazzi) are not configured.
 - No instrumentation tests (would require an AVD / device).
 - The Space Weather (K-index) channel exists but has no fetcher yet.
 
-### Before publishing
-- This is coursework - check your institution's policy before publishing publicly.
-- Google Play requires a **privacy policy** (the app requests fine location) and a
-  completed **Data safety** form.
-- Add a `LICENSE` file. Note that `predict4java` is GPL-licensed, which constrains
-  the distribution license you can choose.
