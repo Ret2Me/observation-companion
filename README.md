@@ -3,6 +3,12 @@
 > **Unofficial app.** Not affiliated with or endorsed by SatNOGS or the Libre
 > Space Foundation it only consumes their public, open APIs.
 
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Ret2Me_observation-companion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Ret2Me_observation-companion)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Ret2Me_observation-companion&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Ret2Me_observation-companion)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Ret2Me_observation-companion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Ret2Me_observation-companion)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Ret2Me_observation-companion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Ret2Me_observation-companion)
+
 A mobile companion for amateur-radio satellite operators built on the
 [SatNOGS](https://satnogs.org/) ecosystem. It lists upcoming satellite passes
 for a chosen location and antenna band, scores the likelihood of reception by
