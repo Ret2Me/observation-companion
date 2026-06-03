@@ -14,9 +14,25 @@ android {
     minSdk = 24
     targetSdk = 35
     versionCode = 1
-    versionName = "1.0"
+    versionName = "1.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  // Two distribution flavors that differ only in how a one-shot GPS fix is
+  // obtained:
+  //   gms  -> Google Play Services (FusedLocation). Ships to Google Play.
+  //   foss -> AOSP LocationManager, zero proprietary deps. What F-Droid builds.
+  // Shared code talks to the LocationProvider interface (src/main); each flavor
+  // supplies its own implementation + LocationProviderFactory under src/<flavor>.
+  flavorDimensions += "distribution"
+  productFlavors {
+    create("gms") {
+      dimension = "distribution"
+    }
+    create("foss") {
+      dimension = "distribution"
+    }
   }
 
   // Release is signed with the upload keystore only when its env vars are present
@@ -94,11 +110,13 @@ dependencies {
   implementation(libs.converter.moshi)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.logging.interceptor)
   implementation(libs.moshi.kotlin)
   implementation(libs.okhttp)
-  implementation(libs.play.services.location)
+  // GMS-only: FusedLocation + the coroutine adapter for its Task API. The foss
+  // flavor uses AOSP LocationManager instead and pulls in neither.
+  "gmsImplementation"(libs.play.services.location)
+  "gmsImplementation"(libs.kotlinx.coroutines.play.services)
   implementation(libs.predict4java)
   implementation(libs.osmdroid.android)
   implementation(libs.retrofit)

@@ -1,0 +1,1 @@
+Satellite pass companion for ham radio operators using the SatNOGS network.

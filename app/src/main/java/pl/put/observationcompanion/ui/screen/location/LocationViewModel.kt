@@ -10,16 +10,13 @@ import androidx.lifecycle.viewModelScope
 import pl.put.observationcompanion.domain.model.AntennaBand
 import pl.put.observationcompanion.domain.model.Preset
 import pl.put.observationcompanion.domain.repository.SettingsRepository
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
+import pl.put.observationcompanion.location.LocationProviderFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class LocationViewModel(
     private val settingsRepository: SettingsRepository,
@@ -111,12 +108,8 @@ class LocationViewModel(
             }
 
             try {
-                val client = LocationServices.getFusedLocationProviderClient(appContext)
-                val cts = CancellationTokenSource()
-                val location = client.getCurrentLocation(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    cts.token
-                ).await()
+                // Flavor-specific source: FusedLocation (gms) or LocationManager (foss).
+                val location = LocationProviderFactory.create(appContext).getCurrentLocation()
                 if (location != null) {
                     saveLocation(location.latitude, location.longitude, location.altitude)
                     _locationEvents.emit("Observer localized.")
