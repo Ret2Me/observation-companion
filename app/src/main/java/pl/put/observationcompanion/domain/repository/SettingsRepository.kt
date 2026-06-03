@@ -28,6 +28,8 @@ interface SettingsRepository {
     suspend fun updateAlarmLeadTime(minutes: Int)
 
     fun getPresetsFlow(): Flow<List<Preset>>
+    /** Seeds the built-in observatory presets into the preset store once. */
+    suspend fun seedDefaultPresetsIfNeeded()
     suspend fun savePreset(preset: Preset)
     suspend fun deletePreset(name: String)
     /** Applies preset's location + bands to the active user settings. */

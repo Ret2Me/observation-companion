@@ -38,6 +38,14 @@ class LocationViewModel(
             initialValue = emptyList()
         )
 
+    init {
+        // Seed the built-in observatory presets into the regular preset store
+        // once, so they show up alongside user-created presets.
+        viewModelScope.launch {
+            settingsRepository.seedDefaultPresetsIfNeeded()
+        }
+    }
+
     fun saveCurrentAsPreset(name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) return
@@ -82,24 +90,6 @@ class LocationViewModel(
         viewModelScope.launch {
             settingsRepository.updateLocation(lat, lon, alt)
             _locationEvents.emit("Location Saved Successfully!")
-        }
-    }
-
-    /**
-     * Applies a built-in observatory preset: jumps the observer to the site
-     * and pre-selects the bands that match the observatory's flagship
-     * receivers. The user can still override bands afterwards in Settings.
-     */
-    fun saveLocationAndBands(
-        lat: Double,
-        lon: Double,
-        alt: Double,
-        bands: Set<pl.put.observationcompanion.domain.model.AntennaBand>
-    ) {
-        viewModelScope.launch {
-            settingsRepository.updateLocation(lat, lon, alt)
-            if (bands.isNotEmpty()) settingsRepository.updateAntennaBands(bands)
-            _locationEvents.emit("Observatory preset applied.")
         }
     }
 

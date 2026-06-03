@@ -10,7 +10,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GpsFixed
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -42,7 +40,6 @@ import androidx.compose.ui.unit.sp
 import pl.put.observationcompanion.data.preferences.PreferencesDataSource
 import pl.put.observationcompanion.di.AppContainer
 import pl.put.observationcompanion.domain.model.AntennaBand
-import pl.put.observationcompanion.domain.model.BuiltInObservatories
 import pl.put.observationcompanion.domain.model.Preset
 import pl.put.observationcompanion.ui.component.OBSERVER_DOT_COLOR
 import pl.put.observationcompanion.ui.component.darkMapFilter
@@ -68,7 +65,7 @@ private fun ObserverMap(
             context.getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
         )
         org.osmdroid.config.Configuration.getInstance().userAgentValue =
-            "LSF-SatNOGS-Companion/1.2 (Android student project, PUT)"
+            "Observation-Companion/1.2 (Android student project, PUT)"
     }
 
     // Keep a single MapView across recompositions; mutate its center/marker
@@ -350,48 +347,9 @@ fun LocationScreen(
 
                 HorizontalDivider(color = Color(0xFF1E293B))
 
-                // Section 3: Observatory Presets
+                // Section 3: Observatory + user presets (built-ins are seeded here)
                 Text(
-                    text = "RADIO OBSERVATORY PRESETS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                ) {
-                    BuiltInObservatories.all.forEach { preset ->
-                        AssistChip(
-                            onClick = {
-                                viewModel.saveLocationAndBands(
-                                    lat = preset.groundLat,
-                                    lon = preset.groundLon,
-                                    alt = preset.groundAlt,
-                                    bands = preset.antennaBands
-                                )
-                            },
-                            label = { Text(preset.name, fontSize = 11.sp) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            },
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                    }
-                }
-
-                HorizontalDivider(color = Color(0xFF1E293B))
-
-                Text(
-                    text = "MY SAVED PRESETS",
+                    text = "OBSERVATORY PRESETS",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF818CF8),
                     fontWeight = FontWeight.Bold,

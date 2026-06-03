@@ -116,7 +116,7 @@ fun PassesScreen(
                 title = {
                     Column(modifier = Modifier.padding(start = 4.dp)) {
                         Text(
-                            text = "LSF SatNOGS",
+                            text = "Observation",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onSurface

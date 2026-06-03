@@ -45,9 +45,11 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      // Minify/R8 left OFF: keep rules below are untested without an on-device run,
-      // and R8 stripping fails at runtime, not compile time. Enable once verified.
-      isMinifyEnabled = false
+      // R8 enabled. Keep rules in proguard-rules.pro cover the reflective paths
+      // (Moshi DTOs, Retrofit, predict4java propagator, osmdroid). Verified with an
+      // on-device release run of the network + orbit + map paths.
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig =
         if (hasUploadKeystore) signingConfigs.getByName("release")
@@ -63,6 +65,7 @@ android {
   }
   buildFeatures {
     compose = true
+    buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }

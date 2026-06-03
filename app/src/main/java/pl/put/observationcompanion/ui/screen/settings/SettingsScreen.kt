@@ -299,7 +299,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "LSF SatNOGS Companion · v1.2",
+                        text = "Observation Companion · v1.2",
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace,
                         color = Color(0xFF64748B),

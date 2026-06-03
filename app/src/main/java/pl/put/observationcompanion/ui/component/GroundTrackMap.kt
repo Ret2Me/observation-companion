@@ -58,7 +58,7 @@ fun GroundTrackMap(
             context.getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
         )
         org.osmdroid.config.Configuration.getInstance().userAgentValue =
-            "LSF-SatNOGS-Companion/1.2 (Android student project, PUT)"
+            "Observation-Companion/1.2 (Android student project, PUT)"
     }
 
     val mapView = remember {
