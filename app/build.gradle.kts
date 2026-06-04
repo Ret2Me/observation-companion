@@ -36,10 +36,10 @@ android {
   }
 
   // Release is signed with the upload keystore only when its env vars are present
-  // (CI / local release machine). Otherwise the release variant falls back to the
-  // debug key so it still BUILDS for verification - such an artifact is debug-signed
-  // and MUST NOT be uploaded to Play. Provide STORE_PASSWORD/KEY_PASSWORD + the
-  // my-upload-key.jks (or KEYSTORE_PATH) to produce a real, uploadable bundle.
+  // (CI / local release machine). Otherwise the release variant is left UNSIGNED so
+  // it still builds from a clean clone (this is what F-Droid does - it builds the
+  // unsigned foss release and signs it with its own key). Provide STORE_PASSWORD/
+  // KEY_PASSWORD + my-upload-key.jks (or KEYSTORE_PATH) for a real Play bundle.
   val hasUploadKeystore = System.getenv("STORE_PASSWORD") != null
 
   signingConfigs {
@@ -67,12 +67,15 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig =
-        if (hasUploadKeystore) signingConfigs.getByName("release")
-        else signingConfigs.getByName("debugConfig")
+      // null -> unsigned release APK; required for F-Droid, which signs it itself.
+      signingConfig = if (hasUploadKeystore) signingConfigs.getByName("release") else null
     }
     debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
+      // Repo-pinned debug keystore when present (consistent signature across
+      // machines); clean clones fall back to the default ~/.android debug key.
+      if (file("${rootDir}/debug.keystore").exists()) {
+        signingConfig = signingConfigs.getByName("debugConfig")
+      }
     }
   }
   compileOptions {
