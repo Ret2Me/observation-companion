@@ -1,0 +1,9 @@
+Initial release.
+
+* Satellite pass predictions for your ground station location and antenna bands
+* Pass ranking with reception probability estimates
+* Doppler shift curves and sky track charts for each pass
+* Ground track map (OpenStreetMap)
+* Pass alarms and notifications
+* SatNOGS network observation stats
+* Fully FOSS build: location via AOSP LocationManager, no Google services
