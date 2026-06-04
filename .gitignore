@@ -15,9 +15,11 @@
 .cxx
 local.properties
 .env
+
 # Signing material - MUST NOT be committed (upload key would be a security incident)
 *.jks
 *.keystore
 debug.keystore
 my-upload-key.jks
 keystore.properties
+/.build-outputs/
