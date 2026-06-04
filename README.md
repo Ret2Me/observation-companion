@@ -1,5 +1,5 @@
 # Observation Companion
-<img src="new_icon.png" width=20%/>
+<img src="fastlane/metadata/android/en-US/images/icon.png" width=20%/>
 
 
 
