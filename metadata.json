@@ -1,6 +1,6 @@
 {
   "name": "Observation Companion",
-  "description": "Mobilny pomocnik radioamatora dla ekosystemu SatNOGS",
+  "description": "Mobile ham radio operator companion for the SatNOGS ecosystem",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
