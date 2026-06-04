@@ -1,4 +1,7 @@
 # Observation Companion
+<img src="new_icon.png" width=20%/>
+
+
 
 > **Unofficial app.** Not affiliated with or endorsed by SatNOGS or the Libre
 > Space Foundation it only consumes their public, open APIs.

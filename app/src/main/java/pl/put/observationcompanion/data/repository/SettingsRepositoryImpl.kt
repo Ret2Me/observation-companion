@@ -2,6 +2,7 @@ package pl.put.observationcompanion.data.repository
 
 import pl.put.observationcompanion.data.preferences.PreferencesDataSource
 import pl.put.observationcompanion.domain.model.AntennaBand
+import pl.put.observationcompanion.domain.model.BuiltInObservatories
 import pl.put.observationcompanion.domain.model.Preset
 import pl.put.observationcompanion.domain.repository.SettingsRepository
 import pl.put.observationcompanion.domain.repository.UserSettings
@@ -51,6 +52,9 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override fun getPresetsFlow(): Flow<List<Preset>> = preferencesDataSource.presetsFlow
+
+    override suspend fun seedDefaultPresetsIfNeeded() =
+        preferencesDataSource.seedDefaultPresetsIfNeeded(BuiltInObservatories.all)
 
     override suspend fun savePreset(preset: Preset) = preferencesDataSource.savePreset(preset)
 

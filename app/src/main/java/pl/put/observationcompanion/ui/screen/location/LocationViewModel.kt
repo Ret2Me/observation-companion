@@ -10,16 +10,13 @@ import androidx.lifecycle.viewModelScope
 import pl.put.observationcompanion.domain.model.AntennaBand
 import pl.put.observationcompanion.domain.model.Preset
 import pl.put.observationcompanion.domain.repository.SettingsRepository
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
+import pl.put.observationcompanion.location.LocationProviderFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class LocationViewModel(
     private val settingsRepository: SettingsRepository,
@@ -37,6 +34,14 @@ class LocationViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    init {
+        // Seed the built-in observatory presets into the regular preset store
+        // once, so they show up alongside user-created presets.
+        viewModelScope.launch {
+            settingsRepository.seedDefaultPresetsIfNeeded()
+        }
+    }
 
     fun saveCurrentAsPreset(name: String) {
         val trimmed = name.trim()
@@ -85,24 +90,6 @@ class LocationViewModel(
         }
     }
 
-    /**
-     * Applies a built-in observatory preset: jumps the observer to the site
-     * and pre-selects the bands that match the observatory's flagship
-     * receivers. The user can still override bands afterwards in Settings.
-     */
-    fun saveLocationAndBands(
-        lat: Double,
-        lon: Double,
-        alt: Double,
-        bands: Set<pl.put.observationcompanion.domain.model.AntennaBand>
-    ) {
-        viewModelScope.launch {
-            settingsRepository.updateLocation(lat, lon, alt)
-            if (bands.isNotEmpty()) settingsRepository.updateAntennaBands(bands)
-            _locationEvents.emit("Observatory preset applied.")
-        }
-    }
-
     @SuppressLint("MissingPermission")
     fun requestGpsLocation() {
         viewModelScope.launch {
@@ -121,12 +108,8 @@ class LocationViewModel(
             }
 
             try {
-                val client = LocationServices.getFusedLocationProviderClient(appContext)
-                val cts = CancellationTokenSource()
-                val location = client.getCurrentLocation(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    cts.token
-                ).await()
+                // Flavor-specific source: FusedLocation (gms) or LocationManager (foss).
+                val location = LocationProviderFactory.create(appContext).getCurrentLocation()
                 if (location != null) {
                     saveLocation(location.latitude, location.longitude, location.altitude)
                     _locationEvents.emit("Observer localized.")

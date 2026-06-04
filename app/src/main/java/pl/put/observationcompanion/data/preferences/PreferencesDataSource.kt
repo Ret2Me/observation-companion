@@ -29,6 +29,7 @@ class PreferencesDataSource @Inject constructor(
         val KEY_MIN_ELEVATION = doublePreferencesKey("min_elevation")
         val KEY_ALARM_LEAD_TIME = intPreferencesKey("alarm_lead_time_minutes")
         val KEY_PRESETS = stringPreferencesKey("presets_v1")
+        val KEY_PRESETS_SEEDED = booleanPreferencesKey("presets_seeded_v1")
         val KEY_COMPACT_MODE = booleanPreferencesKey("compact_mode")
     }
 
@@ -132,6 +133,27 @@ class PreferencesDataSource @Inject constructor(
     }
 
     suspend fun getPresets(): List<Preset> = presetsFlow.first()
+
+    /**
+     * One-time seeding of the built-in observatory presets into the regular
+     * preset store, so they live alongside user-created ones (apply/edit/delete).
+     * Runs atomically and only once: after seeding, deleting a built-in won't
+     * bring it back. User presets always win on a name collision.
+     */
+    suspend fun seedDefaultPresetsIfNeeded(defaults: List<Preset>) {
+        context.dataStore.edit { prefs ->
+            if (prefs[KEY_PRESETS_SEEDED] == true) return@edit
+            val existing = prefs[KEY_PRESETS]?.takeIf { it.isNotBlank() }
+                ?.lineSequence()
+                ?.mapNotNull(::deserializePreset)
+                ?.toList()
+                ?: emptyList()
+            val existingNames = existing.map { it.name }.toSet()
+            val merged = existing + defaults.filter { it.name !in existingNames }
+            prefs[KEY_PRESETS] = merged.joinToString("\n", transform = ::serializePreset)
+            prefs[KEY_PRESETS_SEEDED] = true
+        }
+    }
 
     suspend fun savePreset(preset: Preset) {
         val current = getPresets().filter { it.name != preset.name } + preset

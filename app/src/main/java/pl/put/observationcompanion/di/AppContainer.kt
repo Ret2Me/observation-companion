@@ -44,15 +44,21 @@ class AppContainer(private val context: Context) {
 
     // 3. Network OkHttp & Retrofit with Dynamic Basename Interceptor
     private val okHttpClient: OkHttpClient by lazy {
+        // Only log full request/response bodies in debug builds. In release we
+        // stay silent to avoid leaking API traffic into logcat.
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (pl.put.observationcompanion.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
         val dynamicUrlInterceptor = DynamicBaseUrlInterceptor(preferencesDataSource)
         // SatNOGS TOS asks clients to identify themselves; the default OkHttp UA gets
         // throttled aggressively.
         val userAgentInterceptor = okhttp3.Interceptor { chain ->
             val req = chain.request().newBuilder()
-                .header("User-Agent", "LSF-SatNOGS-Companion/1.2 (Android; student project, PUT)")
+                .header("User-Agent", "Observation-Companion/1.2 (Android; student project, PUT)")
                 .build()
             chain.proceed(req)
         }

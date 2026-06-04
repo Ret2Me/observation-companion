@@ -21,35 +21,38 @@
 #-renamesourcefileattribute SourceFile
 
 # ---------------------------------------------------------------------------
-# Keep rules for enabling R8/minify (isMinifyEnabled = true) on the release
-# build. UNTESTED - verify a release build on a real device (network
-# deserialization + orbit propagation are the risky paths) BEFORE flipping
-# isMinifyEnabled to true in build.gradle.kts. Left commented on purpose.
+# Keep rules for R8/minify (isMinifyEnabled = true) on the release build.
+# Cover the reflective paths: network deserialization + orbit propagation.
 # ---------------------------------------------------------------------------
-#
-# # Keep generic signatures / annotations Moshi & Retrofit rely on.
-# -keepattributes Signature, *Annotation*, InnerClasses, EnclosingMethod
-#
-# # Moshi (codegen adapters + reflective fallback)
-# -keep class **JsonAdapter { *; }
-# -keepclassmembers class * { @com.squareup.moshi.* <methods>; }
-# -keep @com.squareup.moshi.JsonClass class * { *; }
-# -dontwarn com.squareup.moshi.**
-#
-# # Retrofit / OkHttp
-# -dontwarn retrofit2.**
-# -dontwarn okhttp3.**
-# -dontwarn okio.**
-# -keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
-#
-# # DTOs deserialized by name + domain models referenced reflectively
-# -keep class pl.put.observationcompanion.data.remote.dto.** { *; }
-#
-# # predict4java (SGP4/SDP4 propagator)
-# -keep class uk.me.g4dpz.satellite.** { *; }
-# -dontwarn uk.me.g4dpz.satellite.**
-#
-# # osmdroid
-# -dontwarn org.osmdroid.**
-#
-# # Room generated implementations are kept by the Room consumer rules.
+
+# Keep generic signatures / annotations Moshi & Retrofit rely on.
+-keepattributes Signature, *Annotation*, InnerClasses, EnclosingMethod
+
+# Moshi (codegen adapters + reflective fallback)
+-keep class **JsonAdapter { *; }
+-keepclassmembers class * { @com.squareup.moshi.* <methods>; }
+-keep @com.squareup.moshi.JsonClass class * { *; }
+-dontwarn com.squareup.moshi.**
+
+# Retrofit / OkHttp
+-dontwarn retrofit2.**
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+
+# DTOs deserialized by name + domain models referenced reflectively
+-keep class pl.put.observationcompanion.data.remote.dto.** { *; }
+
+# predict4java (SGP4/SDP4 propagator)
+-keep class uk.me.g4dpz.satellite.** { *; }
+-dontwarn uk.me.g4dpz.satellite.**
+
+# predict4java's PassPredictor static-inits Apache commons-logging; R8 strips it
+# otherwise -> NoClassDefFoundError org.apache.commons.logging.LogFactory at runtime.
+-keep class org.apache.commons.logging.** { *; }
+-dontwarn org.apache.commons.logging.**
+
+# osmdroid
+-dontwarn org.osmdroid.**
+
+# Room generated implementations are kept by the Room consumer rules.

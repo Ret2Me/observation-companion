@@ -1,0 +1,21 @@
+Observation Companion is a mobile assistant for amateur radio operators and
+satellite observers who work with the SatNOGS ecosystem.
+
+Set your ground station location and antenna bands, and the app predicts upcoming
+satellite passes, ranks them, and helps you decide which ones are worth tracking.
+
+Features:
+
+* Upcoming pass predictions (AOS/LOS, max elevation, azimuth) computed on-device
+  with an SGP4/SDP4 orbit propagator.
+* Sky-view chart and ground-track map for each pass (OpenStreetMap tiles).
+* Doppler drift curve for the pass.
+* Reception probability based on historical SatNOGS observations.
+* Filtering by antenna band and by satellite.
+* Observatory presets - save and reuse ground-station setups.
+* Optional countdown alarms before a pass begins.
+* Catalog and transmitter statistics from the SatNOGS database.
+
+The app reads public data from the SatNOGS Database and Network APIs and from
+CelesTrak (TLEs). It is not affiliated with or endorsed by the Libre Space
+Foundation / SatNOGS project.
