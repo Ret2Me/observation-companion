@@ -110,7 +110,30 @@ See **[`REPORT.md`](REPORT.md)** for the full derivations. In brief:
 Three channels (`NotificationHelper`): TLE sync (low), pass alerts (high, sound,
 toggled from the UI), and space weather (placeholder for a future K-index feed).
 
+### Why Live Data is Mandatory (No Hardcoded Initial Values)
+Due to the dynamic and physical nature of satellite tracking and astrodynamics,
+ bundling static initial values or an offline database within the APK is not feasible:
+* **Orbital Degradation:** Two-Line Element (TLE) data degrades rapidly due to atmospheric
+drag and orbital perturbations. Hardcoded TLEs would quickly result in highly inaccurate pass
+predictions and failed observations.  
+* **Volatile Satellite Fleet:** New satellites are launched frequently, older ones decay and
+re-enter the atmosphere, and active transmitters undergo frequency adjustments or hardware 
+anomalies.  
+  
+To ensure tracking calculations are mathematically valid and operational, the app must fetch
+real-time upstream data.
+
+### Documented Network Endpoints
+The application connects exclusively to the following network endpoints to fetch data:
+* `tile.openstreetmap.org` - Used by the `osmdroid` library to fetch standard map tiles for
+visualizing the observer's location and satellite ground tracks.  
+* `celestrak.org` (or configured mirrors) - Used to download the latest valid TLE data sets
+* for precise orbit propagation.
+* **SatNOGS DB / Network API** - Used to synchronize up-to-date satellite metadata, transmitter 
+operation modes, and active radio frequencies.
+  
 ---
+
 
 ## Architecture
 
@@ -149,6 +172,7 @@ Full details: **[`STACK.md`](STACK.md)** and **[`REPORT.md`](REPORT.md)**.
 | SatNOGS DB | `https://db.satnogs.org/api/` | `satellites/`, `transmitters/`, `tle/` |
 | SatNOGS Network | `https://network.satnogs.org/api/` | `observations/` |
 | Celestrak | `https://celestrak.org/NORAD/elements/` | `gp.php?CATNR=<norad>&FORMAT=TLE` |
+| OpenStreetMap | `https://tile.openstreetmap.org` | `-` |
 
 Both SatNOGS APIs are public, no OAuth. Hosts can be overridden in Settings (e.g.
 a local mock at `http://10.0.2.2:8080/`). Celestrak is a manual TLE fallback from
