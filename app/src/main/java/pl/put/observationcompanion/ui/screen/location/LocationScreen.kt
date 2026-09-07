@@ -118,8 +118,8 @@ private fun ObserverMap(
         modifier = Modifier
             .fillMaxWidth()
             .height(240.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(8.dp))
     ) {
         AndroidView(
             factory = { mapView },
@@ -151,6 +151,7 @@ fun LocationScreen(
     val presets by viewModel.presetsState.collectAsState()
     var showSavePresetDialog by remember { mutableStateOf(false) }
     var editingPreset by remember { mutableStateOf<Preset?>(null) }
+    var presetPendingDeletion by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(settingsState) {
         settingsState?.let {
@@ -196,7 +197,7 @@ fun LocationScreen(
                 title = { Text("Observer Location", fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color(0xFFF1F5F9)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFFCBD5E1))
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF94A3B8))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -214,7 +215,7 @@ fun LocationScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF6366F1))
+                CircularProgressIndicator(color = Color(0xFF818CF8))
             }
         } else {
             val settings = settingsState!!
@@ -229,11 +230,10 @@ fun LocationScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "OBSERVER MAP",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "Observer map",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 ObserverMap(
@@ -268,18 +268,17 @@ fun LocationScreen(
                 ) {
                     Icon(Icons.Default.GpsFixed, contentDescription = "GPS Finder")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("FETCH GPS STATION LOCATOR", fontWeight = FontWeight.Bold)
+                    Text("Use current GPS position", fontWeight = FontWeight.SemiBold)
                 }
 
                 HorizontalDivider(color = Color(0xFF1E293B))
 
                 // Section 2: Precise coordinate inputs
                 Text(
-                    text = "MANUAL COORDINATES CONFIGURATION",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "Manual coordinates",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -342,25 +341,24 @@ fun LocationScreen(
                         .height(50.dp)
                         .testTag("save_coordinates_button")
                 ) {
-                    Text("APPLY COORDINATES", fontWeight = FontWeight.Bold)
+                    Text("Apply coordinates", fontWeight = FontWeight.SemiBold)
                 }
 
                 HorizontalDivider(color = Color(0xFF1E293B))
 
                 // Section 3: Observatory + user presets (built-ins are seeded here)
                 Text(
-                    text = "OBSERVATORY PRESETS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8),
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "Observer presets",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 UserPresetsSection(
                     presets = presets,
                     onApply = { viewModel.applyPreset(it) },
                     onEdit = { editingPreset = it },
-                    onDelete = { viewModel.deletePreset(it) },
+                    onDelete = { presetPendingDeletion = it },
                     onSaveCurrent = { showSavePresetDialog = true }
                 )
             }
@@ -389,6 +387,25 @@ fun LocationScreen(
             }
         )
     }
+
+    presetPendingDeletion?.let { presetName ->
+        AlertDialog(
+            onDismissRequest = { presetPendingDeletion = null },
+            title = { Text("Delete preset?") },
+            text = { Text("The preset \"$presetName\" will be removed from this device.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deletePreset(presetName)
+                        presetPendingDeletion = null
+                    }
+                ) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { presetPendingDeletion = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 @Composable
@@ -407,7 +424,7 @@ private fun UserPresetsSection(
         ) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text("SAVE CURRENT LOCATION + BANDS", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text("Save current location and bands", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
         if (presets.isEmpty()) {
             Text(
@@ -430,11 +447,11 @@ private fun UserPresetsSection(
                             text = preset.name,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFE2E8F0)
+                            color = Color(0xFFF1F5F9)
                         )
                         Text(
                             text = String.format(
-                                "%.2f°N, %.2f°E · %s",
+                                "%.2f°N, %.2f°E | %s",
                                 preset.groundLat,
                                 preset.groundLon,
                                 preset.antennaBands.joinToString(", ") { it.displayName }
@@ -455,7 +472,7 @@ private fun UserPresetsSection(
                         onClick = { onEdit(preset) },
                         modifier = Modifier.testTag("edit_preset_${preset.name}")
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFFCBD5E1))
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF94A3B8))
                     }
                     IconButton(
                         onClick = { onDelete(preset.name) },
@@ -509,9 +526,9 @@ private fun SavePresetDialog(
             TextButton(
                 onClick = { onConfirm(name) },
                 enabled = trimmed.isNotBlank()
-            ) { Text("SAVE", fontWeight = FontWeight.Bold) }
+            ) { Text("Save", fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("CANCEL") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
 
@@ -621,8 +638,8 @@ private fun EditPresetDialog(
                         )
                     )
                 }
-            ) { Text("SAVE", fontWeight = FontWeight.Bold) }
+            ) { Text("Save", fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("CANCEL") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }

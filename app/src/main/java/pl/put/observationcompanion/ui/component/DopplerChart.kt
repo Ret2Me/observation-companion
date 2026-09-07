@@ -30,12 +30,12 @@ fun DopplerChart(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0F172A)) // Cosmic Blue-Slate background
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF0F172A))
             .padding(12.dp)
     ) {
         Text(
-            text = "DOPPLER DRIFT CURVE (Δf = f_nom - f_obs)",
+            text = "Doppler shift",
             color = Color(0xFF94A3B8),
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
@@ -94,7 +94,7 @@ fun DopplerChart(
 
             // Helper to map index & offset to plot space
             fun getX(index: Int, total: Int): Float {
-                return paddingLeft + (index.toFloat() / (total - 1).coerceAtAtLeast(1)) * plotWidth
+                return paddingLeft + (index.toFloat() / (total - 1).coerceAtLeast(1)) * plotWidth
             }
 
             fun getY(offsetHz: Double): Float {
@@ -141,7 +141,7 @@ fun DopplerChart(
 
             // 4. Draw labels using Native Canvas
             val paint = android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#64748B")
+                color = android.graphics.Color.parseColor("#94A3B8")
                 textSize = 24f
                 isAntiAlias = true
                 typeface = android.graphics.Typeface.MONOSPACE
@@ -186,8 +186,4 @@ fun DopplerChart(
             )
         }
     }
-}
-
-private fun Int.coerceAtAtLeast(minimumValue: Int): Int {
-    return if (this < minimumValue) minimumValue else this
 }

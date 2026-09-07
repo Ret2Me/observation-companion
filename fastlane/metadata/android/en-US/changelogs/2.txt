@@ -1,0 +1,6 @@
+Operator-focused interface with a map-first pass detail view.
+
+* Redesigned dark visual system across all screens
+* More pass, orbit, Doppler and transmitter data visible at once
+* Improved layouts for phones and landscape screens
+* Updated navigation and removed the RX MAX radio icon

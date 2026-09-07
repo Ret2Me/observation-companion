@@ -89,7 +89,7 @@ class PassesViewModel(
     }
 
     private val _allPasses = MutableStateFlow<List<Pass>>(emptyList())
-    private val _loadingProgress = MutableStateFlow<LoadingProgress?>(LoadingProgress("Starting…"))
+    private val _loadingProgress = MutableStateFlow<LoadingProgress?>(LoadingProgress("Starting..."))
     private val _error = MutableStateFlow<String?>(null)
     private val _skippedCount = MutableStateFlow(0)
     private val _sortMode = MutableStateFlow(PassSortMode.BY_AOS)
@@ -142,7 +142,7 @@ class PassesViewModel(
                 )
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, PassesUiState.Loading(LoadingProgress("Starting…")))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, PassesUiState.Loading(LoadingProgress("Starting...")))
 
     private fun setStage(stage: String, current: Int = 0, total: Int = 0) {
         val prev = _loadingProgress.value
@@ -171,7 +171,7 @@ class PassesViewModel(
             _loadingProgress.value = null
             val computedAt = passCacheDao.lastComputedAt()
             if (computedAt != null) {
-                _statusNotice.value = "Cached ${humanAgo(Instant.ofEpochMilli(computedAt))} - refreshing…"
+                _statusNotice.value = "Cached ${humanAgo(Instant.ofEpochMilli(computedAt))} - refreshing..."
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed loading pass cache", e)
@@ -229,7 +229,7 @@ class PassesViewModel(
             }
             try {
                 if (forceRemoteSync) {
-                    setStage("Refreshing SatNOGS catalog…")
+                    setStage("Refreshing SatNOGS catalog...")
                     try {
                         satnogsRepository.syncFromRemote(syncProgress)
                     } catch (e: Exception) {
@@ -237,13 +237,13 @@ class PassesViewModel(
                     }
                 }
 
-                setStage("Reading local satellite cache…")
+                setStage("Reading local satellite cache...")
                 val settings = settingsRepository.getUserSettings()
                 var availableSatellites = satnogsRepository.getSatellites().filter { it.isActive }
 
                 if (availableSatellites.isEmpty()) {
                     Log.d(TAG, "Empty satellite cache, bootstrapping...")
-                    setStage("First run - bootstrapping from SatNOGS DB…")
+                    setStage("First run - bootstrapping from SatNOGS DB...")
                     try {
                         satnogsRepository.syncFromRemote(syncProgress)
                     } catch (e: Exception) {
@@ -252,7 +252,7 @@ class PassesViewModel(
                     availableSatellites = satnogsRepository.getSatellites().filter { it.isActive }
                 }
 
-                setStage("Loaded ${availableSatellites.size} active satellites. Loading transmitters…")
+                setStage("Loaded ${availableSatellites.size} active satellites. Loading transmitters...")
                 val transmitters = satnogsRepository.getTransmitters().filter { it.isActive }
 
                 val station = SatPropagator.GroundStation(
@@ -262,7 +262,7 @@ class PassesViewModel(
                 )
                 lastStation = station
 
-                setStage("Matching ${transmitters.size} transmitters against your antenna bands…")
+                setStage("Matching ${transmitters.size} transmitters against your antenna bands...")
                 val matched = filterByBandUseCase.execute(
                     availableSatellites,
                     transmitters,
@@ -372,7 +372,7 @@ class PassesViewModel(
                     flat.sortedBy { it.aos }
                 }
 
-                setStage("Sorting ${predicted.size} passes…")
+                setStage("Sorting ${predicted.size} passes...")
                 _allPasses.value = predicted
                 _loadingProgress.value = null
                 resetPaging()

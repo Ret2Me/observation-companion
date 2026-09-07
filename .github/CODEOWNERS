@@ -1,0 +1,5 @@
+# Release infrastructure is security-sensitive. GitHub rulesets should require
+# this owner's review for changes to these paths.
+/.github/workflows/ @Ret2Me
+/scripts/publish_play.py @Ret2Me
+/app/build.gradle.kts @Ret2Me

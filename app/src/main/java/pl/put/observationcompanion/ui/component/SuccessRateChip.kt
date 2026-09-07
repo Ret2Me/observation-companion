@@ -23,36 +23,36 @@ fun SuccessRateChip(
 ) {
     val (bgColor, textColor, label, borderColor) = when (status) {
         SatelliteStatus.UNLIKELY -> Quadruple(
-            Color(0x26F43F5E), // rose-500/15
+            Color(0x26FFB4AB), // rose-500/15
             Color(0xFFFB7185), // rose-400
             "Unlikely",
-            Color(0x4DF43F5E)  // rose-500/30
+            Color(0x4DFFB4AB)  // rose-500/30
         )
         SatelliteStatus.PROMISING -> Quadruple(
-            Color(0x2610B981), // emerald-500/15
+            Color(0x269FD49E), // emerald-500/15
             Color(0xFF34D399), // emerald-400
             "Promising",
-            Color(0x4D10B981)  // emerald-500/30
+            Color(0x4D9FD49E)  // emerald-500/30
         )
         SatelliteStatus.NEUTRAL -> Quadruple(
-            Color(0x26F59E0B), // amber-500/15
+            Color(0x26F2C26D), // amber-500/15
             Color(0xFFFBBF24), // amber-400
             "Neutral",
-            Color(0x4DF59E0B)  // amber-500/30
+            Color(0x4DF2C26D)  // amber-500/30
         )
         SatelliteStatus.NO_DATA -> Quadruple(
-            Color(0x2664748B), // slate-500/15
+            Color(0x269E8C8F), // slate-500/15
             Color(0xFF94A3B8), // slate-400
             "No Data",
-            Color(0x4D64748B)  // slate-500/30
+            Color(0x4D9E8C8F)  // slate-500/30
         )
     }
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(

@@ -114,21 +114,12 @@ fun PassesScreen(
             TopAppBar(
                 scrollBehavior = if (isLandscape) scrollBehavior else null,
                 title = {
-                    Column(modifier = Modifier.padding(start = 4.dp)) {
-                        Text(
-                            text = "Observation",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "COMPANION V1.2",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 2.sp,
-                            color = Color(0xFF818CF8) // Indigo-400
-                        )
-                    }
+                    Text(
+                        text = "Observation Companion",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 },
                 actions = {
                     IconButton(
@@ -163,7 +154,7 @@ fun PassesScreen(
                 .padding(innerPadding)
         ) {
             // Observer Positioning Badge Banner - single compact row:
-            //   ● 52.40°N, 16.92°E · VHF·UHF·L·S
+            //   Location, coordinates, configured bands
             // Everything fits on one line; bands ellipsize on overflow.
             userSettingsState?.let { settings ->
               AnimatedVisibility(visible = locationPillVisible.value) {
@@ -171,47 +162,29 @@ fun PassesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0x266366F1))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF111C33))
                         .clickable { onNavigateToLocation() }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Glowing indicator dot
-                    Box(contentAlignment = Alignment.Center) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .background(
-                                    color = Color(0x6610B981),
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                )
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .background(
-                                    color = Color(0xFF10B981),
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                )
-                        )
-                    }
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFF818CF8), modifier = Modifier.size(16.dp))
                     Text(
                         text = String.format("%.2f°N, %.2f°E", settings.groundLat, settings.groundLon),
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFFCBD5E1),
+                        color = Color(0xFF94A3B8),
                         maxLines = 1
                     )
                     Text(
-                        text = "·",
+                        text = "|",
                         fontSize = 12.sp,
-                        color = Color(0xFF475569)
+                        color = Color(0xFF64748B)
                     )
                     Text(
-                        text = settings.antennaBands.joinToString("·") { it.displayName }
+                        text = settings.antennaBands.joinToString(" / ") { it.displayName }
                             .ifBlank { "no bands" },
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
@@ -227,8 +200,8 @@ fun PassesScreen(
 
             // Inline status bar between the location pill and the sort bar.
             // While refreshing -> thin progress line + stage text.
-            // While idle -> small notice ("Cached N min ago", "Updated", …) or
-            // nothing at all. Same row in both modes so the layout doesn't jump.
+            // While idle -> small notice ("Cached N min ago", "Updated") or
+            // nothing at all. Same row in both modes so the layout does not jump.
             RefreshStatusBar(
                 isRefreshing = isRefreshing,
                 stage = refreshProgress?.stage,
@@ -263,7 +236,7 @@ fun PassesScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "NO SATELLITE PASSES DETECTED",
+                                    text = "No satellite passes found",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -283,13 +256,13 @@ fun PassesScreen(
                                         onClick = { passesViewModel.refreshPasses(forceRemoteSync = true) },
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("FETCH API DATA")
+                                        Text("Refresh data")
                                     }
                                     OutlinedButton(
                                         onClick = onNavigateToSettings,
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("SELECT BAND")
+                                        Text("Select band")
                                     }
                                 }
                             }
@@ -365,7 +338,7 @@ fun PassesScreen(
                                                 onClick = { passesViewModel.loadMore() },
                                                 shape = RoundedCornerShape(10.dp)
                                             ) {
-                                                Text("LOAD MORE (${state.totalCount - state.passes.size} more)")
+                                                Text("Load more (${state.totalCount - state.passes.size})")
                                             }
                                         }
                                     }
@@ -384,7 +357,7 @@ fun PassesScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "ERROR CALCULATING TRAJECTORIES",
+                                text = "Could not calculate trajectories",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.padding(bottom = 8.dp)
@@ -432,7 +405,7 @@ private fun RefreshStatusBar(isRefreshing: Boolean, stage: String?, idleNotice: 
                 Spacer(modifier = Modifier.height(4.dp))
             }
             Text(
-                text = if (isRefreshing) (stage ?: "Syncing…") else (idleNotice ?: ""),
+                text = if (isRefreshing) (stage ?: "Syncing...") else (idleNotice ?: ""),
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Medium,
@@ -457,7 +430,7 @@ private fun LoadingPanel(progress: LoadingProgress) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "LOADING",
+                text = "Loading pass data",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
@@ -468,7 +441,7 @@ private fun LoadingPanel(progress: LoadingProgress) {
                 text = progress.stage,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFE2E8F0),
+                color = Color(0xFFF1F5F9),
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -511,16 +484,16 @@ private fun LoadingPanel(progress: LoadingProgress) {
                         .padding(12.dp)
                 ) {
                     Text(
-                        text = "// SYSTEM LOG",
+                        text = "Sync log",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
-                        color = Color(0xFF475569)
+                        color = Color(0xFF64748B)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     progress.log.forEach { line ->
                         Text(
-                            text = "› $line",
+                            text = line,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             color = Color(0xFF64748B),
@@ -558,7 +531,7 @@ private fun SortBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "SORT BY",
+                text = "Sort by",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.5.sp,
@@ -616,7 +589,7 @@ private fun SortBar(
                 label = {
                     Text(
                         text = if (active)
-                            "Satellites · $selectedSatelliteCount selected"
+                            "Satellites: $selectedSatelliteCount selected"
                         else
                             "Filter by satellite",
                         fontSize = 11.sp,
@@ -690,7 +663,7 @@ private fun SatelliteFilterDialog(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "${draft.size} selected · ${available.size} total",
+                    text = "${draft.size} selected | ${available.size} total",
                     fontSize = 11.sp,
                     color = Color(0xFF94A3B8),
                     fontFamily = FontFamily.Monospace
@@ -721,7 +694,7 @@ private fun SatelliteFilterDialog(
                             Text(
                                 text = name,
                                 fontSize = 13.sp,
-                                color = Color(0xFFE2E8F0),
+                                color = Color(0xFFF1F5F9),
                                 maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
@@ -743,13 +716,13 @@ private fun SatelliteFilterDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(draft) }) {
-                Text("APPLY", fontWeight = FontWeight.Bold)
+                Text("Apply", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             Row {
-                TextButton(onClick = { draft = emptySet() }) { Text("CLEAR") }
-                TextButton(onClick = onDismiss) { Text("CANCEL") }
+                TextButton(onClick = { draft = emptySet() }) { Text("Clear") }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
             }
         }
     )

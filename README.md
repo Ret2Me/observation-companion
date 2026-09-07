@@ -37,6 +37,8 @@ Author: Filip Poplewski.
 |----------|----------|
 | **[Technical Report (`REPORT.md`)](REPORT.md)** | Full theoretical & technical description orbital mechanics (SGP4/SDP4), the Doppler model, the reception-probability scoring, sky-arc and ground-track geometry, architecture, and the data flow end to end. **Start here for the theory.** |
 | **[Tech Stack (`STACK.md`)](STACK.md)** | Libraries, versions and the rationale behind each dependency. |
+| **[Google Play deployment (`docs/play-deployment.md`)](docs/play-deployment.md)** | Secure tag-based deployment with GitHub Environments, OIDC and staged production rollout. |
+| **[Play Data safety audit (`docs/play-data-safety.md`)](docs/play-data-safety.md)** | Source-backed answers for the current Play Console Data safety form. |
 
 ---
 
@@ -191,41 +193,40 @@ No Android Studio required - the Android command-line tools plus Gradle are enou
 
 ### Commands
 ```bash
-# debug APK
-JAVA_HOME=/path/to/jdk-17 gradle :app:assembleDebug
-# -> app/build/outputs/apk/debug/app-debug.apk
+# Google Play debug APK
+JAVA_HOME=/path/to/jdk-17 ./gradlew :app:assembleGmsDebug
+# -> app/build/outputs/apk/gms/debug/app-gms-debug.apk
 
 # release App Bundle (the Play artifact)
-JAVA_HOME=/path/to/jdk-17 gradle :app:bundleRelease
-# -> app/build/outputs/bundle/release/app-release.aab
+JAVA_HOME=/path/to/jdk-17 ./gradlew :app:bundleGmsRelease
+# -> app/build/outputs/bundle/gmsRelease/app-gms-release.aab
 
 # unit tests
-gradle :app:testDebugUnitTest
+./gradlew :app:testGmsDebugUnitTest
 
 # install on a connected device / emulator
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/gms/debug/app-gms-debug.apk
 
 # launch
 adb shell monkey -p pl.put.observationcompanion -c android.intent.category.LAUNCHER 1
 ```
 
 ### Signing a release for Google Play
-`bundleRelease` is signed with the **upload keystore** only when these
-environment variables are present; otherwise it falls back to the debug key so
-the build still completes for verification (such an artifact **cannot** be
-uploaded to Play):
+`bundleGmsRelease` is signed with the **upload keystore** only when these
+environment variables are present. Without them Gradle creates an unsigned
+release bundle which **cannot** be uploaded to Play:
 
 ```bash
 export KEYSTORE_PATH=/path/to/my-upload-key.jks   # optional; defaults to ./my-upload-key.jks
 export STORE_PASSWORD=...
 export KEY_ALIAS=upload                            # optional; defaults to "upload"
 export KEY_PASSWORD=...
-gradle :app:bundleRelease
+./gradlew :app:bundleGmsRelease
 ```
 
-R8/minification is currently **off**: keep rules are drafted (but untested) in
-`proguard-rules.pro`. Verify a release build on a real device before enabling
-`isMinifyEnabled`.
+R8 minification and resource shrinking are enabled for release builds. The
+tag-based GitHub Actions deployment and one-time setup are documented in
+[`docs/play-deployment.md`](docs/play-deployment.md).
 
 ---
 
@@ -250,4 +251,3 @@ Instrumentation tests (Roborazzi) are not configured.
   backoff with jitter, and observation history is fetched lazily per satellite.
 - No instrumentation tests (would require an AVD / device).
 - The Space Weather (K-index) channel exists but has no fetcher yet.
-

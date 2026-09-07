@@ -1,0 +1,186 @@
+name: Publish to Google Play
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Google Play track
+        type: choice
+        required: true
+        default: internal
+        options:
+          - internal
+          - production
+      rollout:
+        description: Production rollout fraction, ignored for internal
+        type: choice
+        required: true
+        default: "1.0"
+        options:
+          - "0.05"
+          - "0.10"
+          - "0.25"
+          - "0.50"
+          - "1.0"
+      confirm_tag:
+        description: For production, enter the selected tag, for example v1.3
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: google-play-${{ github.event_name == 'push' && 'internal' || inputs.track }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'Ret2Me/observation-companion' && github.repository_id == '1253416570'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment:
+      name: google-play-${{ github.event_name == 'push' && 'internal' || inputs.track }}
+    env:
+      DEPLOY_TRACK: ${{ github.event_name == 'push' && 'internal' || inputs.track }}
+      ROLLOUT_FRACTION: ${{ github.event_name == 'push' && '1.0' || inputs.track == 'internal' && '1.0' || inputs.rollout }}
+      CONFIRM_TAG: ${{ inputs.confirm_tag }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Validate release source and metadata
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
+            echo "Run this workflow from an immutable release tag." >&2
+            exit 1
+          fi
+
+          version_code="$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+).*$/\1/p' app/build.gradle.kts)"
+          version_name="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*$/\1/p' app/build.gradle.kts)"
+          if [[ ! "${version_code}" =~ ^[1-9][0-9]*$ ]] || [[ -z "${version_name}" ]]; then
+            echo "Could not read a single valid versionCode/versionName." >&2
+            exit 1
+          fi
+
+          expected_tag="v${version_name}"
+          if [[ "${GITHUB_REF_NAME}" != "${expected_tag}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match versionName ${version_name}. Expected ${expected_tag}." >&2
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "The tagged commit is not reachable from origin/main." >&2
+            exit 1
+          fi
+
+          changelog="fastlane/metadata/android/en-US/changelogs/${version_code}.txt"
+          if [[ ! -s "${changelog}" ]]; then
+            echo "Missing release notes: ${changelog}" >&2
+            exit 1
+          fi
+
+          if [[ "${DEPLOY_TRACK}" == "production" && "${CONFIRM_TAG}" != "${GITHUB_REF_NAME}" ]]; then
+            echo "Production confirmation must exactly match ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+
+          echo "version_code=${version_code}" >> "${GITHUB_OUTPUT}"
+          echo "version_name=${version_name}" >> "${GITHUB_OUTPUT}"
+          echo "changelog=${changelog}" >> "${GITHUB_OUTPUT}"
+
+      - name: Run GMS unit tests
+        run: ./gradlew --no-daemon --stacktrace :app:testGmsDebugUnitTest
+
+      - name: Build and verify signed Play bundle
+        id: bundle
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ vars.PLAY_UPLOAD_KEY_ALIAS }}
+          EXPECTED_CERT_SHA256: ${{ vars.PLAY_UPLOAD_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+
+          for name in KEYSTORE_B64 STORE_PASSWORD KEY_PASSWORD KEY_ALIAS EXPECTED_CERT_SHA256; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing protected environment setting: ${name}." >&2
+              exit 1
+            fi
+          done
+
+          export KEYSTORE_PATH="${RUNNER_TEMP}/play-upload-key.jks"
+          trap 'rm -f "${KEYSTORE_PATH}"' EXIT
+          umask 077
+          printf '%s' "${KEYSTORE_B64}" | base64 --decode > "${KEYSTORE_PATH}"
+
+          ./gradlew --no-daemon --stacktrace :app:bundleGmsRelease
+          bundle_path="app/build/outputs/bundle/gmsRelease/app-gms-release.aab"
+          if [[ ! -s "${bundle_path}" ]]; then
+            echo "Expected bundle was not created: ${bundle_path}" >&2
+            exit 1
+          fi
+
+          LC_ALL=C jarsigner -verify "${bundle_path}" | grep -Fq "jar verified."
+          actual_fingerprint="$(LC_ALL=C keytool -printcert -jarfile "${bundle_path}" \
+            | sed -nE 's/^[[:space:]]*SHA256: (.*)$/\1/p' | head -n 1)"
+          normalize() { printf '%s' "$1" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]'; }
+          if [[ "$(normalize "${actual_fingerprint}")" != "$(normalize "${EXPECTED_CERT_SHA256}")" ]]; then
+            echo "The bundle was not signed by the configured Play upload certificate." >&2
+            exit 1
+          fi
+
+          echo "path=${bundle_path}" >> "${GITHUB_OUTPUT}"
+          rm -f "${KEYSTORE_PATH}"
+          trap - EXIT
+
+      - name: Obtain a short-lived Google access token
+        id: google-auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 600s
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+
+      - name: Publish through Android Publisher API
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.google-auth.outputs.access_token }}
+        run: |
+          python3 scripts/publish_play.py \
+            --package pl.put.observationcompanion \
+            --bundle "${{ steps.bundle.outputs.path }}" \
+            --track "${DEPLOY_TRACK}" \
+            --rollout "${ROLLOUT_FRACTION}" \
+            --version-code "${{ steps.release.outputs.version_code }}" \
+            --version-name "${{ steps.release.outputs.version_name }}" \
+            --release-notes "${{ steps.release.outputs.changelog }}"
+
+      - name: Remove release material from the runner
+        if: always()
+        shell: bash
+        run: |
+          rm -f "${RUNNER_TEMP}/play-upload-key.jks"
+          rm -f app/build/outputs/bundle/gmsRelease/app-gms-release.aab

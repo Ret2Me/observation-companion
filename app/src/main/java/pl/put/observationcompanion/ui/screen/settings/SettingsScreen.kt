@@ -1,5 +1,7 @@
 package pl.put.observationcompanion.ui.screen.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pl.put.observationcompanion.domain.model.AntennaBand
+import pl.put.observationcompanion.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +63,7 @@ fun SettingsScreen(
                 title = { Text("Settings", fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color(0xFFF1F5F9)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFFCBD5E1))
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF94A3B8))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -78,7 +81,7 @@ fun SettingsScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF6366F1))
+                CircularProgressIndicator(color = Color(0xFF818CF8))
             }
         } else {
             val settings = settingsState!!
@@ -94,11 +97,10 @@ fun SettingsScreen(
             ) {
                 // Section 1: Endpoints Configuration
                 Text(
-                    text = "API SERVER CONFIGURATION",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "API servers",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 OutlinedTextField(
@@ -151,11 +153,10 @@ fun SettingsScreen(
 
                 // Section 2: Antenna & Band Settings
                 Text(
-                    text = "ANTENNA FREQUENCY BANDS (MULTI-SELECT)",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "Antenna frequency bands",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 val chunkedBands = AntennaBand.values().toList().chunked(3)
@@ -191,7 +192,7 @@ fun SettingsScreen(
                 }
 
                 Text(
-                    text = "Active Listeners:\n" + settings.antennaBands.joinToString("\n") { "• ${it.displayName}: ${it.frequencyRange.first / 1_000_000} - ${it.frequencyRange.last / 1_000_000} MHz" },
+                    text = "Active bands\n" + settings.antennaBands.joinToString("\n") { "${it.displayName}: ${it.frequencyRange.first / 1_000_000} to ${it.frequencyRange.last / 1_000_000} MHz" },
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     color = Color(0xFFA5B4FC), // Indigo-300
@@ -204,11 +205,10 @@ fun SettingsScreen(
 
                 // Section 3: Alarm configurations
                 Text(
-                    text = "SCHEDULING ALARMS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF818CF8), // Indigo-400
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = "Pass alarms",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFFF1F5F9),
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Row(
@@ -217,9 +217,9 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
-                        Text("Enable Pass Countdown Alarms", fontWeight = FontWeight.SemiBold, color = Color(0xFFF1F5F9))
+                        Text("Enable pass countdown alarms", fontWeight = FontWeight.SemiBold, color = Color(0xFFF1F5F9))
                         Text(
-                            text = "Sound warning warning alert on AOS arrive",
+                            text = "Play a sound before acquisition of signal",
                             color = Color(0xFF64748B), // Slate-500
                             fontSize = 12.sp
                         )
@@ -238,7 +238,7 @@ fun SettingsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Warning Lead Time", style = MaterialTheme.typography.bodyMedium, color = Color(0xFFCBD5E1))
+                            Text("Warning Lead Time", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF94A3B8))
                             Text("${localLeadTime.toInt()} minutes before AOS", fontWeight = FontWeight.Bold, color = Color(0xFFA5B4FC))
                         }
                         Slider(
@@ -258,7 +258,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Minimum Horizon Evaluation cutoff", style = MaterialTheme.typography.bodyMedium, color = Color(0xFFCBD5E1))
+                        Text("Minimum Horizon Evaluation cutoff", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF94A3B8))
                         Text("${localMinElevation.toInt()}°", fontWeight = FontWeight.Bold, color = Color(0xFFA5B4FC))
                     }
                     Slider(
@@ -278,7 +278,7 @@ fun SettingsScreen(
                     onClick = { viewModel.triggerForceSync() },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF10B981), // Emerald-500 for secondary action success flow
+                        containerColor = Color(0xFF34D399), // Emerald-500 for secondary action success flow
                         contentColor = Color.White
                     ),
                     modifier = Modifier
@@ -288,7 +288,7 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Default.CloudSync, contentDescription = "Manual Sync")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("FORCE TELEMETRY SYNC (24H)", fontWeight = FontWeight.Bold)
+                    Text("Sync telemetry for the next 24 hours", fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -298,8 +298,21 @@ fun SettingsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    TextButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(context.getString(R.string.privacy_policy_url))
+                                )
+                            )
+                        },
+                        modifier = Modifier.testTag("privacy_policy_link")
+                    ) {
+                        Text(context.getString(R.string.privacy_policy))
+                    }
                     Text(
-                        text = "Observation Companion · v1.2",
+                        text = "Observation Companion | v${pl.put.observationcompanion.BuildConfig.VERSION_NAME}",
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace,
                         color = Color(0xFF64748B),
@@ -319,4 +332,3 @@ fun SettingsScreen(
     }
 
 }
-

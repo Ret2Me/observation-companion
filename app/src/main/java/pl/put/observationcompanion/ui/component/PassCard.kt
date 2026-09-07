@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -60,7 +59,7 @@ fun PassCard(
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
 
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF0F172A)
         ),
@@ -70,7 +69,7 @@ fun PassCard(
             .border(
                 width = 1.dp,
                 color = Color(0xFF1E293B),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(10.dp)
             )
             .clickable { onOpenDetail(pass) }
     ) {
@@ -89,7 +88,7 @@ fun PassCard(
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "NORAD ID: ${pass.noradId} • ${dateFormatter.format(pass.aos)}",
+                        text = "NORAD ${pass.noradId} | ${dateFormatter.format(pass.aos)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF94A3B8),
                         maxLines = 1,
@@ -121,7 +120,7 @@ fun PassCard(
                             .fillMaxWidth()
                             .border(
                                 width = 1.dp,
-                                color = Color(0x66F59E0B),
+                                color = Color(0x66F2C26D),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -156,19 +155,19 @@ fun PassCard(
                         timeFormatter.format(pass.aos),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE2E8F0)
+                        color = Color(0xFFF1F5F9)
                     )
                     Text("Az: ${pass.startAzimuth.roundToInt()}°", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("MAX ELEVATION", style = MaterialTheme.typography.labelSmall, color = Color(0xFF818CF8), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("Max elevation", style = MaterialTheme.typography.labelSmall, color = Color(0xFF818CF8), fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Navigation,
                             contentDescription = "Max Elevation Arrow",
-                            tint = Color(0xFF6366F1),
+                            tint = Color(0xFF818CF8),
                             modifier = Modifier
                                 .size(14.dp)
                                 .rotate(180f)
@@ -191,7 +190,7 @@ fun PassCard(
                         timeFormatter.format(pass.los),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE2E8F0)
+                        color = Color(0xFFF1F5F9)
                     )
                     Text("Az: ${pass.endAzimuth.roundToInt()}°", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
                 }
@@ -204,11 +203,11 @@ fun PassCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "RECEPTION CHANCE",
+                    text = "Reception chance",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF64748B),
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    letterSpacing = 0.sp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 ReceptionProbabilityChip(
@@ -225,13 +224,6 @@ fun PassCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Radio,
-                        contentDescription = "Transmitter icon",
-                        tint = Color(0xFF818CF8),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "RX Match: ${(tx.frequency / 1_000_000.0)} MHz (${tx.modulation ?: "Unknown"} / ${tx.mode ?: "No Mode"})",
                         fontSize = 12.sp,
@@ -303,7 +295,7 @@ fun PassCard(
                     text = "Sound Alarm ($alarmLeadTime min before AOS)",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFFCBD5E1)
+                    color = Color(0xFF94A3B8)
                 )
                 Switch(
                     checked = isAlarmEnabled,
@@ -340,12 +332,12 @@ fun CompactPassCard(
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
     Card(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
         modifier = modifier
             .fillMaxWidth()
             .testTag("compact_pass_card_${pass.satelliteId}")
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(8.dp))
             .clickable { onOpenDetail(pass) }
     ) {
         Row(
@@ -370,7 +362,7 @@ fun CompactPassCard(
                 Text(
                     text = buildString {
                         append("AOS ${timeFormatter.format(pass.aos)}")
-                        pass.matchedTransmitter?.let { append("  •  ${"%.3f".format(it.frequency / 1_000_000.0)} MHz") }
+                        pass.matchedTransmitter?.let { append(" | ${"%.3f".format(it.frequency / 1_000_000.0)} MHz") }
                     },
                     fontSize = 12.sp,
                     color = Color(0xFF94A3B8),
@@ -387,12 +379,12 @@ fun CompactPassCard(
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFFA5B4FC)
                 )
-                Text("MAX EL", fontSize = 9.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("Max el", fontSize = 9.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
             }
             Icon(
                 imageVector = Icons.Default.OpenInNew,
                 contentDescription = "Open details",
-                tint = Color(0xFF475569),
+                tint = Color(0xFF64748B),
                 modifier = Modifier.padding(start = 8.dp).size(18.dp)
             )
         }
