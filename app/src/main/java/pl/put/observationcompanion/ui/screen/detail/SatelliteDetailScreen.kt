@@ -8,10 +8,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import pl.put.observationcompanion.domain.model.Observation
 import pl.put.observationcompanion.domain.model.SatDumpSupport
 import pl.put.observationcompanion.domain.model.Transmitter
@@ -77,7 +78,7 @@ fun SatelliteDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFFCBD5E1))
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF94A3B8))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = bg)
@@ -92,47 +93,121 @@ fun SatelliteDetailScreen(
             return@Scaffold
         }
 
-        Column(
+        val sheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.PartiallyExpanded,
+            skipHiddenState = true
+        )
+        val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+        val scope = rememberCoroutineScope()
+
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 276.dp,
+            sheetContainerColor = card,
+            sheetContentColor = textPrimary,
+            sheetTonalElevation = 0.dp,
+            sheetShadowElevation = 12.dp,
+            sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            sheetDragHandle = {
+                BottomSheetDefaults.DragHandle(color = textFaint)
+            },
+            sheetContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    PassSummarySection(s, timeFmt)
+
+                    HorizontalDivider(color = border)
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SectionLabel("Pass geometry")
+                        Spacer(Modifier.weight(1f))
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    if (sheetState.currentValue == SheetValue.Expanded) {
+                                        sheetState.partialExpand()
+                                    } else {
+                                        sheetState.expand()
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (sheetState.currentValue == SheetValue.Expanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                                contentDescription = if (sheetState.currentValue == SheetValue.Expanded) "Collapse details" else "Expand details"
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(if (sheetState.currentValue == SheetValue.Expanded) "Collapse" else "More data")
+                        }
+                    }
+
+                    GeometryCharts(s)
+
+                    s.satellite?.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                        SectionCard {
+                            SectionLabel("Satellite notes")
+                            Spacer(Modifier.height(6.dp))
+                            Text(desc, fontSize = 13.sp, color = textMuted)
+                        }
+                    }
+
+                    SectionCard {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            SectionLabel("Orbit data")
+                            Spacer(Modifier.weight(1f))
+                            TleEpochBadge(s.tle?.epoch)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = { viewModel.refreshTleFromCelestrak() },
+                            enabled = !s.refreshingTle,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            if (s.refreshingTle) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = accent)
+                            } else {
+                                Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (s.tle == null) "Fetch TLE from Celestrak" else "Refresh TLE from Celestrak")
+                        }
+                        s.tleNotice?.let {
+                            Spacer(Modifier.height(6.dp))
+                            Text(it, fontSize = 11.sp, color = textMuted, fontFamily = FontFamily.Monospace)
+                        }
+                    }
+
+                    SectionCard {
+                        SectionLabel("Transmitters (${s.transmitters.size})")
+                        Spacer(Modifier.height(8.dp))
+                        if (s.transmitters.isEmpty()) {
+                            Text("No transmitters listed for this satellite.", fontSize = 12.sp, color = textFaint)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                s.transmitters.forEach { tx -> TransmitterRow(tx) }
+                            }
+                        }
+                    }
+
+                    SectionCard {
+                        SectionLabel("Recent SatNOGS observations")
+                        Spacer(Modifier.height(8.dp))
+                        ObservationTable(s.observations, dateTimeFmt, loaded = s.observationsLoaded)
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .background(bg)
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            PassSummarySection(s, timeFmt)
-
-            s.satellite?.description?.takeIf { it.isNotBlank() }?.let { desc ->
-                SectionCard {
-                    SectionLabel("ABOUT")
-                    Spacer(Modifier.height(6.dp))
-                    Text(desc, fontSize = 13.sp, color = textMuted)
-                }
-            }
-
-            // Geometry charts
-            SectionCard {
-                SectionLabel("PASS GEOMETRY")
-                Spacer(Modifier.height(10.dp))
-                Text("SKY VIEW", fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, color = textFaint)
-                Spacer(Modifier.height(4.dp))
-                SkyMapChart(points = s.sky, modifier = Modifier.fillMaxWidth(0.85f))
-                Spacer(Modifier.height(14.dp))
-                DopplerChart(dopplerPoints = s.doppler, modifier = Modifier.fillMaxWidth())
-            }
-
-            // Ground track + Celestrak
-            SectionCard {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SectionLabel("GROUND TRACK")
-                    Spacer(Modifier.weight(1f))
-                    TleEpochBadge(s.tle?.epoch)
-                }
-                Spacer(Modifier.height(10.dp))
+        ) { _ ->
+            Box(Modifier.fillMaxSize().background(bg)) {
                 GroundTrackMap(
                     track = s.groundTrack,
                     observerLat = s.observerLat,
@@ -140,63 +215,66 @@ fun SatelliteDetailScreen(
                     livePosition = livePosition,
                     previousTrack = s.previousPassTrack,
                     nextTrack = s.nextPassTrack,
-                    fullTrack = s.fullOrbitTrack
+                    fullTrack = s.fullOrbitTrack,
+                    modifier = Modifier.fillMaxSize()
                 )
-                Spacer(Modifier.height(8.dp))
-                TrackLegend(
-                    hasPrevious = s.previousPassTrack.isNotEmpty(),
-                    hasNext = s.nextPassTrack.isNotEmpty(),
-                    hasFullOrbit = s.fullOrbitTrack.isNotEmpty()
-                )
-                Spacer(Modifier.height(6.dp))
-                LivePositionLine(livePosition)
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(
-                        onClick = { viewModel.refreshTleFromCelestrak() },
-                        enabled = !s.refreshingTle,
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        if (s.refreshingTle) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = accent)
-                        } else {
-                            Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                Surface(
+                    color = bg.copy(alpha = 0.92f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, border),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TleEpochBadge(s.tle?.epoch)
+                            Spacer(Modifier.weight(1f))
+                            LivePositionLine(livePosition)
                         }
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            if (s.tle == null) "FETCH TLE (CELESTRAK)" else "REFRESH TLE (CELESTRAK)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
+                        Spacer(Modifier.height(8.dp))
+                        TrackLegend(
+                            hasPrevious = s.previousPassTrack.isNotEmpty(),
+                            hasNext = s.nextPassTrack.isNotEmpty(),
+                            hasFullOrbit = s.fullOrbitTrack.isNotEmpty()
                         )
                     }
                 }
-                s.tleNotice?.let {
-                    Spacer(Modifier.height(6.dp))
-                    Text(it, fontSize = 11.sp, color = textMuted, fontFamily = FontFamily.Monospace)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeometryCharts(s: SatelliteDetail) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        if (maxWidth < 600.dp) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.fillMaxWidth()) {
+                    Text("Sky view", style = MaterialTheme.typography.labelMedium, color = textMuted)
+                    Spacer(Modifier.height(8.dp))
+                    SkyMapChart(points = s.sky, modifier = Modifier.fillMaxWidth(0.82f).align(Alignment.CenterHorizontally))
+                }
+                Column(Modifier.fillMaxWidth()) {
+                    Text("Frequency shift", style = MaterialTheme.typography.labelMedium, color = textMuted)
+                    Spacer(Modifier.height(8.dp))
+                    DopplerChart(dopplerPoints = s.doppler, modifier = Modifier.fillMaxWidth())
                 }
             }
-
-            // Transmitters
-            SectionCard {
-                SectionLabel("TRANSMITTERS (${s.transmitters.size})")
-                Spacer(Modifier.height(8.dp))
-                if (s.transmitters.isEmpty()) {
-                    Text("No transmitters listed for this satellite.", fontSize = 12.sp, color = textFaint)
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        s.transmitters.forEach { tx -> TransmitterRow(tx) }
-                    }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(0.9f)) {
+                    Text("Sky view", style = MaterialTheme.typography.labelMedium, color = textMuted)
+                    Spacer(Modifier.height(8.dp))
+                    SkyMapChart(points = s.sky, modifier = Modifier.fillMaxWidth())
+                }
+                Column(Modifier.weight(1.1f)) {
+                    Text("Frequency shift", style = MaterialTheme.typography.labelMedium, color = textMuted)
+                    Spacer(Modifier.height(8.dp))
+                    DopplerChart(dopplerPoints = s.doppler, modifier = Modifier.fillMaxWidth())
                 }
             }
-
-            // Observation history
-            SectionCard {
-                SectionLabel("RECENT OBSERVATIONS (SATNOGS)")
-                Spacer(Modifier.height(8.dp))
-                ObservationTable(s.observations, dateTimeFmt, loaded = s.observationsLoaded)
-            }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
 }
@@ -204,7 +282,7 @@ fun SatelliteDetailScreen(
 @Composable
 private fun PassSummarySection(s: SatelliteDetail, timeFmt: DateTimeFormatter) {
     val pass = s.pass
-    SectionCard {
+    Column {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f)) {
                 Text("NORAD ${pass.noradId}", fontSize = 12.sp, color = textMuted, fontFamily = FontFamily.Monospace)
@@ -219,15 +297,28 @@ private fun PassSummarySection(s: SatelliteDetail, timeFmt: DateTimeFormatter) {
 
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             TimeColumn("AOS", timeFmt.format(pass.aos), "Az ${pass.startAzimuth.roundToInt()}°", Alignment.Start)
-            TimeColumn("MAX EL", "${pass.maxElevation.roundToInt()}°", "Az ${pass.tcaAzimuth.roundToInt()}°", Alignment.CenterHorizontally, accentValue = true)
+            val tca = Instant.ofEpochMilli((pass.aos.toEpochMilli() + pass.los.toEpochMilli()) / 2)
+            TimeColumn("TCA", timeFmt.format(tca), "${pass.maxElevation.roundToInt()}° at ${pass.tcaAzimuth.roundToInt()}°", Alignment.CenterHorizontally, accentValue = true)
             TimeColumn("LOS", timeFmt.format(pass.los), "Az ${pass.endAzimuth.roundToInt()}°", Alignment.End)
         }
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("RECEPTION CHANCE", fontSize = 11.sp, color = textFaint, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Spacer(Modifier.width(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            pass.matchedTransmitter?.let { transmitter ->
+                Column(Modifier.weight(1f)) {
+                    Text("Receiver", style = MaterialTheme.typography.labelSmall, color = textFaint)
+                    Text(
+                        text = "%.4f MHz%s".format(
+                            transmitter.frequency / 1_000_000.0,
+                            transmitter.mode?.takeIf { it.isNotBlank() }?.let { " | $it" } ?: ""
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textPrimary,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            } ?: Spacer(Modifier.weight(1f))
             ReceptionProbabilityChip(
                 probability = pass.receptionProbability,
                 goodCount = pass.observationGoodCount,
@@ -235,7 +326,7 @@ private fun PassSummarySection(s: SatelliteDetail, timeFmt: DateTimeFormatter) {
             )
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
 
         DecoderBadgeRow(
             hasSatnogs = pass.satelliteHasDecoder,
@@ -267,7 +358,7 @@ private fun DecoderBadgeRow(hasSatnogs: Boolean, hasSatDump: Boolean) {
 private fun DecoderBadge(label: String, present: Boolean, presentColor: Color) {
     val bg = if (present) presentColor.copy(alpha = 0.15f) else Color(0xFF111C33)
     val fg = if (present) presentColor else textFaint
-    val text = if (present) "$label  ✓" else "$label  ✗"
+    val text = "$label: ${if (present) "available" else "unavailable"}"
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
@@ -279,7 +370,6 @@ private fun DecoderBadge(label: String, present: Boolean, presentColor: Color) {
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = fg,
-            letterSpacing = 1.sp,
             fontFamily = FontFamily.Monospace
         )
     }
@@ -339,7 +429,7 @@ private fun TransmitterRow(tx: Transmitter) {
             text = listOfNotNull(
                 tx.mode?.takeIf { it.isNotBlank() }?.let { "Mode: $it" },
                 tx.modulation?.takeIf { it.isNotBlank() }?.let { "Type: $it" }
-            ).joinToString("  •  ").ifBlank { "No mode/type info" },
+            ).joinToString(" | ").ifBlank { "No mode or type information" },
             fontSize = 11.sp,
             color = textMuted,
             fontFamily = FontFamily.Monospace
@@ -361,7 +451,7 @@ private fun ObservationTable(observations: List<Observation>, fmt: DateTimeForma
                 color = accent
             )
             Spacer(Modifier.width(8.dp))
-            Text("Fetching from SatNOGS Network…", fontSize = 12.sp, color = textMuted)
+            Text("Fetching from SatNOGS Network...", fontSize = 12.sp, color = textMuted)
         }
         return
     }
@@ -378,7 +468,7 @@ private fun ObservationTable(observations: List<Observation>, fmt: DateTimeForma
     val failed = observations.count { it.status.equals("failed", true) }
 
     Text(
-        text = "$good good · $failed failed · ${observations.size} total",
+        text = "$good good | $failed failed | ${observations.size} total",
         fontSize = 11.sp,
         color = textMuted,
         fontFamily = FontFamily.Monospace
@@ -386,9 +476,9 @@ private fun ObservationTable(observations: List<Observation>, fmt: DateTimeForma
     Spacer(Modifier.height(8.dp))
 
     Row(modifier = Modifier.fillMaxWidth()) {
-        Text("WHEN", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.1f))
-        Text("STATION", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        Text("STATUS", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold)
+        Text("When", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.1f))
+        Text("Station", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text("Status", fontSize = 10.sp, color = textFaint, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(4.dp))
     HorizontalDivider(color = border)
@@ -415,9 +505,9 @@ private fun ObservationTable(observations: List<Observation>, fmt: DateTimeForma
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             )
             val (label, color) = when (obs.status.lowercase()) {
-                "good" -> "GOOD" to Color(0xFF34D399)
-                "failed" -> "FAILED" to Color(0xFFFB7185)
-                else -> "UNKNOWN" to textFaint
+                "good" -> "Good" to Color(0xFF34D399)
+                "failed" -> "Failed" to Color(0xFFFB7185)
+                else -> "Unknown" to textFaint
             }
             Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = color)
         }
@@ -499,7 +589,7 @@ private fun LivePositionLine(live: pl.put.observationcompanion.domain.model.Grou
             text = if (live == null) {
                 "Live position unavailable (no TLE)"
             } else {
-                "Live: %.2f°, %.2f° • updates every 2 s".format(live.latitude, live.longitude)
+                "Live: %.2f°, %.2f° | 2 s".format(live.latitude, live.longitude)
             },
             fontSize = 11.sp,
             color = textMuted,
@@ -513,14 +603,14 @@ private fun SectionCard(content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(card)
-            .padding(16.dp),
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF111C33))
+            .padding(14.dp),
         content = content
     )
 }
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = accent)
+    Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = textPrimary)
 }

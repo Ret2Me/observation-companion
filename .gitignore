@@ -11,15 +11,23 @@
 .DS_Store
 /build
 /captures
+/graphify-out/
 .externalNativeBuild
 .cxx
 local.properties
 .env
+__pycache__/
+*.py[cod]
 
 # Signing material - MUST NOT be committed (upload key would be a security incident)
 *.jks
 *.keystore
+*.p12
+*.pfx
+*.jks.b64
+*.keystore.b64
 debug.keystore
 my-upload-key.jks
 keystore.properties
+gha-creds-*.json
 /.build-outputs/

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Observation Companion</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_url">https://ret2me.github.io/observation-companion/privacy-policy.html</string>
 </resources>

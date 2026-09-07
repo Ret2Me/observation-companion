@@ -12,9 +12,9 @@ android {
   defaultConfig {
     applicationId = "pl.put.observationcompanion"
     minSdk = 24
-    targetSdk = 35
-    versionCode = 1
-    versionName = "1.2"
+    targetSdk = 36
+    versionCode = 2
+    versionName = "1.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

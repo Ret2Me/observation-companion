@@ -208,13 +208,13 @@ class SatnogsRepositoryImpl @Inject constructor(
 
     override suspend fun syncFromRemote(onProgress: ((String) -> Unit)?) {
         try {
-            onProgress?.invoke("Downloading satellite catalog from SatNOGS DB…")
+            onProgress?.invoke("Downloading satellite catalog from SatNOGS DB...")
             Log.d(TAG, "Starting sync satellites from DB API...")
             val rawSats = dbApi.getSatellites()
             if (rawSats.isNotEmpty()) {
                 val satEntities = rawSats.map { it.toEntity() }.filter { it.id.isNotEmpty() }
                 if (satEntities.isNotEmpty()) {
-                    onProgress?.invoke("Saving ${satEntities.size} satellites to local DB…")
+                    onProgress?.invoke("Saving ${satEntities.size} satellites to local DB...")
                     satelliteDao.insertSatellites(satEntities)
                 }
             }
@@ -224,31 +224,31 @@ class SatnogsRepositoryImpl @Inject constructor(
             val validSatIds = allSats.map { it.id }.toSet()
             val validNoradIds = allSats.map { it.noradId }.filter { it.isNotEmpty() }.toSet()
 
-            onProgress?.invoke("Downloading transmitter catalog…")
+            onProgress?.invoke("Downloading transmitter catalog...")
             Log.d(TAG, "Starting sync transmitters...")
             val rawTransmitters = dbApi.getTransmitters()
             if (rawTransmitters.isNotEmpty()) {
                 val txEntities = rawTransmitters.map { it.toEntity() }
                     .filter { it.id.isNotEmpty() && it.frequency > 0 && it.satelliteId in validSatIds }
                 if (txEntities.isNotEmpty()) {
-                    onProgress?.invoke("Saving ${txEntities.size} transmitters…")
+                    onProgress?.invoke("Saving ${txEntities.size} transmitters...")
                     transmitterDao.insertTransmitters(txEntities)
                 }
             }
 
-            onProgress?.invoke("Downloading TLEs (orbital elements)…")
+            onProgress?.invoke("Downloading TLEs (orbital elements)...")
             Log.d(TAG, "Starting sync TLEs...")
             val rawTles = dbApi.getTles()
             if (rawTles.isNotEmpty()) {
                 val tleEntities = rawTles.map { it.toEntity() }
                     .filter { it.noradId.isNotEmpty() && it.noradId in validNoradIds }
                 if (tleEntities.isNotEmpty()) {
-                    onProgress?.invoke("Saving ${tleEntities.size} TLEs…")
+                    onProgress?.invoke("Saving ${tleEntities.size} TLEs...")
                     tleDao.insertTles(tleEntities)
                 }
             }
 
-            onProgress?.invoke("Downloading recent observations…")
+            onProgress?.invoke("Downloading recent observations...")
             Log.d(TAG, "Syncing global recent observations for initialization...")
             val rawObs = networkApi.getObservations(limit = 100)
             if (rawObs.isNotEmpty()) {

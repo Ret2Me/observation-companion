@@ -11,8 +11,6 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -32,13 +30,13 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import kotlin.math.abs
 
-private const val SELECTED_TRACK_COLOR = "#A5B4FC"   // indigo-300
-private const val PREVIOUS_TRACK_COLOR = "#FBBF24"   // amber-400
-private const val NEXT_TRACK_COLOR = "#34D399"       // emerald-400
-private const val FULL_TRACK_COLOR = "#22D3EE"       // cyan-400 (matches live marker)
-private const val HALO_COLOR = "#020617"             // slate-950
-private const val OBSERVER_COLOR = 0xFF10B981.toInt() // emerald-500
-private const val LIVE_COLOR = 0xFF22D3EE.toInt()     // cyan-400
+private const val SELECTED_TRACK_COLOR = "#A5B4FC"
+private const val PREVIOUS_TRACK_COLOR = "#FBBF24"
+private const val NEXT_TRACK_COLOR = "#34D399"
+private const val FULL_TRACK_COLOR = "#22D3EE"
+private const val HALO_COLOR = "#020617"
+private const val OBSERVER_COLOR = 0xFF10B981.toInt()
+private const val LIVE_COLOR = 0xFF22D3EE.toInt()
 
 @Composable
 fun GroundTrackMap(
@@ -136,10 +134,8 @@ fun GroundTrackMap(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(260.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(8.dp))
     ) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
     }

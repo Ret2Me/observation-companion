@@ -27,19 +27,19 @@ fun ReceptionProbabilityChip(
     val pct = (probability.coerceIn(0.0, 1.0) * 100).roundToInt()
     val (bg, fg, border) = when {
         probability >= 0.65 -> Triple(
-            Color(0x2610B981), // emerald-500/15
+            Color(0x269FD49E), // emerald-500/15
             Color(0xFF34D399),
-            Color(0x4D10B981)
+            Color(0x4D9FD49E)
         )
         probability >= 0.40 -> Triple(
-            Color(0x26F59E0B), // amber-500/15
+            Color(0x26F2C26D), // amber-500/15
             Color(0xFFFBBF24),
-            Color(0x4DF59E0B)
+            Color(0x4DF2C26D)
         )
         else -> Triple(
-            Color(0x26F43F5E), // rose-500/15
+            Color(0x26FFB4AB), // rose-500/15
             Color(0xFFFB7185),
-            Color(0x4DF43F5E)
+            Color(0x4DFFB4AB)
         )
     }
 
@@ -47,13 +47,13 @@ fun ReceptionProbabilityChip(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(bg)
-            .border(1.dp, border, RoundedCornerShape(8.dp))
+            .border(1.dp, border, RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
-            text = "RX $pct% · $historyLabel",
+            text = "RX $pct% | $historyLabel",
             color = fg,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,

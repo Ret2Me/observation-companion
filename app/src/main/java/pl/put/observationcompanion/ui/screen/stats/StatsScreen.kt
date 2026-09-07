@@ -35,10 +35,9 @@ fun StatsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "STATS",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp,
+                        "Statistics",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 },
@@ -80,10 +79,9 @@ fun StatsScreen(
 private fun SectionHeader(text: String) {
     Text(
         text = text,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 2.sp,
-        color = Color(0xFF6366F1)
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = Color(0xFFF1F5F9)
     )
 }
 
@@ -92,7 +90,7 @@ private fun StatCard(content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF0F172A))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -101,7 +99,7 @@ private fun StatCard(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun StatRow(label: String, value: String, valueColor: Color = Color(0xFFE2E8F0)) {
+private fun StatRow(label: String, value: String, valueColor: Color = Color(0xFFF1F5F9)) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -121,7 +119,7 @@ private fun StatRow(label: String, value: String, valueColor: Color = Color(0xFF
 @Composable
 private fun SyncCard(s: Stats) {
     StatCard {
-        SectionHeader("SYNC STATE")
+        SectionHeader("Sync state")
         // Show only relative age in the value column - absolute timestamps
         // were overflowing on narrow phones. Tap-and-hold could reveal the
         // exact time later if we ever need it.
@@ -131,7 +129,7 @@ private fun SyncCard(s: Stats) {
             "Oldest TLE epoch",
             s.oldestTleEpoch?.let { humanAge(it) } ?: "-",
             valueColor = if (s.oldestTleEpoch?.let { Duration.between(it, Instant.now()).toDays() > 30 } == true)
-                Color(0xFFFBBF24) else Color(0xFFE2E8F0)
+                Color(0xFFFBBF24) else Color(0xFFF1F5F9)
         )
     }
 }
@@ -139,7 +137,7 @@ private fun SyncCard(s: Stats) {
 @Composable
 private fun CatalogCard(s: Stats) {
     StatCard {
-        SectionHeader("CATALOG")
+        SectionHeader("Catalog")
         StatRow("Satellites (total)", s.satellitesTotal.toString())
         StatRow("Satellites (active)", s.satellitesActive.toString(), Color(0xFFA5B4FC))
         StatRow("With decoders", s.satellitesWithDecoder.toString())
@@ -155,7 +153,7 @@ private fun CatalogCard(s: Stats) {
 @Composable
 private fun BandBreakdownCard(s: Stats) {
     StatCard {
-        SectionHeader("ACTIVE TRANSMITTERS BY BAND")
+        SectionHeader("Active transmitters by band")
         s.transmittersPerBand.forEach { (band, count) ->
             StatRow(band.displayName, count.toString())
         }
@@ -172,7 +170,7 @@ private fun BandBreakdownCard(s: Stats) {
 @Composable
 private fun ObservationsCard(s: Stats) {
     StatCard {
-        SectionHeader("OBSERVATIONS (CACHED)")
+        SectionHeader("Cached observations")
         StatRow("Total", s.observationsTotal.toString())
         StatRow("Good", s.observationsGood.toString(), Color(0xFF34D399))
         StatRow("Failed", s.observationsFailed.toString(), Color(0xFFFB7185))
@@ -185,7 +183,7 @@ private fun ObservationsCard(s: Stats) {
 @Composable
 private fun StorageCard(s: Stats) {
     StatCard {
-        SectionHeader("STORAGE")
+        SectionHeader("Storage")
         StatRow("Room DB on disk", formatBytes(s.dbSizeBytes))
     }
 }
