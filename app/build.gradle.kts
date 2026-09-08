@@ -79,6 +79,8 @@ android {
     }
   }
   compileOptions {
+    // java.time is used throughout the app, including on Android 7 (API 24/25).
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
   }
@@ -90,6 +92,7 @@ android {
 }
 
 dependencies {
+  coreLibraryDesugaring(libs.desugar.jdk.libs)
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
@@ -119,6 +122,8 @@ dependencies {
   // GMS-only: FusedLocation + the coroutine adapter for its Task API. The foss
   // flavor uses AOSP LocationManager instead and pulls in neither.
   "gmsImplementation"(libs.play.services.location)
+  // Play services transitively requests Fragment 1.1.0, flagged by Google Play.
+  "gmsImplementation"(libs.androidx.fragment)
   "gmsImplementation"(libs.kotlinx.coroutines.play.services)
   implementation(libs.predict4java)
   implementation(libs.osmdroid.android)

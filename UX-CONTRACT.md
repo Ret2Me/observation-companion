@@ -29,6 +29,7 @@ Loading preserves layout dimensions where possible. Empty lists explain what is 
 | Pattern | Owner | Used by |
 | --- | --- | --- |
 | App palette and typography | `ui/theme` | All screens |
+| System bars, horizontal display cutouts and keyboard insets | `MainActivity` / navigation host | All screens |
 | Operational pass summary | `PassCard` and detail sheet | Pass list, satellite detail |
 | Reception state | `SuccessRateChip`, `ReceptionProbabilityChip` | Pass list, satellite detail |
 | Map treatment and track legend | `GroundTrackMap` | Satellite detail, observer location |
@@ -37,3 +38,13 @@ Loading preserves layout dimensions where possible. Empty lists explain what is 
 ## Accessibility baseline
 
 All icon-only actions require a content description. Interactive controls keep at least a 48 dp target. Body text targets readable contrast on the fixed dark surfaces. Color-coded data also includes a text label, line style or both.
+
+## Edge-to-edge layout
+
+`MainActivity` enables AndroidX edge-to-edge with transparent bars and light
+system icons for the fixed dark palette. Compose paints the background; theme
+code must not set deprecated window status/navigation-bar colors.
+The navigation host applies and consumes horizontal display-cutout and IME
+insets. Each screen's Material Scaffold owns the remaining system-bar insets
+through its content padding and top app bar. Avoid applying full safe-drawing
+padding again at the root, which would double the status-bar gap.
